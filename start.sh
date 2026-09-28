@@ -1,24 +1,18 @@
 #!/usr/bin/env bash
 
-echo "--- Memulai start.sh ---"
+echo "=== MEMULAI CONTAINER ==="
 
-# Bersihkan cache agar konfigurasi terbaru terbaca
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
+# Coba clear cache, tapi abaikan jika gagal
+php artisan config:clear || true
+php artisan cache:clear || true
 
-echo "--- Menjalankan migrasi database ---"
-# Gunakan || true agar jika migrasi gagal (misal salah password DB), container tidak langsung mati
-php artisan migrate --force || echo "Migrasi dilewati atau gagal"
-
-# Ambil port dari environment variable PORT yang diberikan Railway
+# Gunakan port dari Railway atau default 8080
 PORT="${PORT:-8080}"
-echo "Mengatur Apache agar berjalan pada port $PORT..."
+echo "Mengatur port Apache ke: $PORT"
 
-# Ubah port default Apache (80) ke port dinamis Railway
+# Konfigurasi port Apache
 sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf
 sed -i "s/:80/:${PORT}/g" /etc/apache2/sites-available/000-default.conf
 
-echo "--- Menjalankan Apache ---"
-# Jalankan Apache sebagai proses utama container
+echo "=== MENJALANKAN APACHE ==="
 exec apache2-foreground
