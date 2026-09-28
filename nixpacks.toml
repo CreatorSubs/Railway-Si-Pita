@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["php84", "php84Packages.composer", "git", "unzip"]
-
-[phases.build]
-cmds = ["composer install --no-dev --optimize-autoloader --ignore-platform-req=php"]
-
-[start]
-cmd = "php artisan config:cache && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public"

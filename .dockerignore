@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+.git
+.vercel
+node_modules
+vendor
+public/hot
+public/build
+storage/logs/*.log
+bootstrap/cache/*.php

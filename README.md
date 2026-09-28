@@ -57,16 +57,17 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-## Deploy to Vercel
+## Deploy to Railway
 
-Vercel runs this application as a PHP 8.4 serverless function. Set the Vercel project root to this repository and use `npm run build` as the build command. Do not set a static output directory.
+Railway should build this repository with its `Dockerfile`. The container serves Laravel from `public/` and listens on Railway's injected `PORT`; do not set a fixed port or a separate start command.
 
-Configure these production environment variables in Vercel:
+Add these variables to the Railway service:
 
-- `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY`, and `APP_URL`
-- `OWNER_PASSWORD` to seed the initial Owner account securely
-- `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` for a managed MySQL database
-- `SESSION_DRIVER=database`, `CACHE_STORE=database`, and `LOG_CHANNEL=stderr`
-- `FILESYSTEM_DISK=s3` and `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`, and `AWS_ENDPOINT` for an S3-compatible bucket
+- `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY`, `APP_URL`, and a strong `OWNER_PASSWORD`
+- `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` copied from the Aiven service
+- `SESSION_DRIVER=database`, `CACHE_STORE=database`, `LOG_CHANNEL=stderr`, and `FILESYSTEM_DISK=local`
+- If Aiven requires its CA certificate, set `MYSQL_ATTR_SSL_CA_BASE64` to the base64-encoded contents of Aiven's CA certificate. The container writes it to `/tmp` and configures PDO to use it.
 
-Generate `APP_KEY` once with `php artisan key:generate --show` and keep the same value across deployments. Set a strong `OWNER_PASSWORD`, then run `php artisan migrate --force` and `php artisan db:seed --force` once against the production database before serving traffic; do not run migrations or seeders in the Vercel build or per request. Vercel's function filesystem is read-only except for temporary storage, so database records and uploaded certificate templates must use the managed database and object storage configured above.
+Generate `APP_KEY` once with `php artisan key:generate --show` and keep it unchanged between deploys. After the first deploy, run `php artisan migrate --force` once from the Railway service shell. If the Owner account does not exist yet, run `php artisan db:seed --force` once with `OWNER_PASSWORD` set. Migrations and seeders are intentionally not run automatically on every container start.
+
+Certificate templates use Laravel's local public disk. Attach a Railway volume at `/var/www/html/storage/app/public` so uploaded templates survive container rebuilds. Aiven credentials are set in Railway and are not copied into the Docker image; `.dockerignore` excludes local `.env` files.

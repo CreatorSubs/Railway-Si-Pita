@@ -1,18 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/sh
+set -eu
 
-echo "=== MEMULAI CONTAINER ==="
+PORT="${PORT:-8080}"
+printf 'Listen %s\n' "$PORT" > /etc/apache2/ports.conf
+sed -ri "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
-# Gunakan port 8080 secara paksa agar sesuai dengan settingan Networking Railway
-PORT="8080"
-echo "Menggunakan port: $PORT"
+if [ -n "${MYSQL_ATTR_SSL_CA_BASE64:-}" ]; then
+	printf '%s' "$MYSQL_ATTR_SSL_CA_BASE64" | base64 -d > /tmp/aiven-ca.pem
+	export MYSQL_ATTR_SSL_CA=/tmp/aiven-ca.pem
+fi
 
-# Atur ulang konfigurasi port Apache
-echo "Listen $PORT" > /etc/apache2/ports.conf
-sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$PORT>/g" /etc/apache2/sites-available/000-default.conf
-
-# Bersihkan cache
-php artisan config:clear || true
-php artisan cache:clear || true
-
-echo "=== MENJALANKAN APACHE ==="
 exec apache2-foreground
