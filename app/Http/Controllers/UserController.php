@@ -27,6 +27,6 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Akun admin baru berhasil dibuat!');
+        return redirect()->route('admin.user.index')->with('success', 'Akun admin baru berhasil dibuat!');
     }
 }

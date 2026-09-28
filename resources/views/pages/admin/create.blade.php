@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
-                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary rounded-pill px-4">Batal</a>
+                        <a href="{{ route('admin.certificate.create') }}" class="btn btn-secondary rounded-pill px-4">Batal</a>
                         <button type="submit" class="btn btn-primary-custom text-white rounded-pill px-4">Lanjut Atur Posisi Teks →</button>
                     </div>
                 </form>

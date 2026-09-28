@@ -56,3 +56,17 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Deploy to Vercel
+
+Vercel runs this application as a PHP 8.4 serverless function. Set the Vercel project root to this repository and use `npm run build` as the build command. Do not set a static output directory.
+
+Configure these production environment variables in Vercel:
+
+- `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY`, and `APP_URL`
+- `OWNER_PASSWORD` to seed the initial Owner account securely
+- `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` for a managed MySQL database
+- `SESSION_DRIVER=database`, `CACHE_STORE=database`, and `LOG_CHANNEL=stderr`
+- `FILESYSTEM_DISK=s3` and `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`, and `AWS_ENDPOINT` for an S3-compatible bucket
+
+Generate `APP_KEY` once with `php artisan key:generate --show` and keep the same value across deployments. Set a strong `OWNER_PASSWORD`, then run `php artisan migrate --force` and `php artisan db:seed --force` once against the production database before serving traffic; do not run migrations or seeders in the Vercel build or per request. Vercel's function filesystem is read-only except for temporary storage, so database records and uploaded certificate templates must use the managed database and object storage configured above.

@@ -3,7 +3,7 @@
 <head>
     <style>
         @page { margin: 0; }
-        body { margin: 0; padding: 0; font-family: sans-serif; background-image: url('{{ public_path("storage/" . $certificate->template_path) }}'); background-size: cover; }
+        body { margin: 0; padding: 0; font-family: sans-serif; background-size: cover; @if($templateDataUri) background-image: url('{{ $templateDataUri }}'); @endif }
         .absolute-element { position: absolute; }
     </style>
 </head>

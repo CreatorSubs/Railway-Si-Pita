@@ -10,11 +10,18 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $ownerPassword = env('OWNER_PASSWORD');
+
+        if (! $ownerPassword) {
+            return;
+        }
+
         User::updateOrCreate(
             ['email' => 'admin@diskominfo.go.id'],
             [
                 'name' => 'Admin Diskominfo',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($ownerPassword),
+                'is_active' => true,
             ]
         );
     }

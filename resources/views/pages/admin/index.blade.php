@@ -37,7 +37,7 @@
                             <td>{{ $item->event_name }}</td>
                             <td><span class="badge bg-info text-dark">{{ $item->role }}</span></td>
                             <td>
-                                <a href="{{ route('certificate.download', $item->id) }}" class="btn btn-sm btn-primary rounded-pill px-3">Download</a>
+                                <a href="{{ route('admin.certificate.download', $item->id) }}" class="btn btn-sm btn-primary rounded-pill px-3">Download</a>
                             </td>
                         </tr>
                     @empty

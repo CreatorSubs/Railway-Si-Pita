@@ -8,7 +8,7 @@
         </div>
         <div>
             @auth
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">Dashboard Admin</a>
+                <a href="{{ route('admin.certificate.create') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">Dashboard Admin</a>
             @else
                 <a href="{{ route('login') }}" class="text-decoration-none text-dark fw-semibold">Login</a>
             @endauth

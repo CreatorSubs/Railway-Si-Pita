@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Certificate;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,7 +25,7 @@ class CertificateController extends Controller
         // Jika ada file baru di-upload, simpan. Jika tidak, ambil dari input hidden atau gunakan default.
         $templatePath = null;
         if ($request->hasFile('template')) {
-            $templatePath = $request->file('template')->store('certificates/templates', 'public');
+            $templatePath = $request->file('template')->store('certificates/templates', $this->templateDisk());
         } else {
             $templatePath = $request->input('existing_template_path') ?? $request->input('template_path') ?? 'default-template.png';
         }
@@ -66,16 +71,63 @@ class CertificateController extends Controller
         return redirect()->route('admin.certificate.check')->with('success', 'Sertifikat berhasil dibuat!');
     }
 
-    public function editor($id = 1)
+    public function editor(int $id)
     {
-        $certificate = Certificate::find($id);
-        return view('pages.admin.editor_positions', compact('certificate'));
+        $certificate = Certificate::findOrFail($id);
+        $templateUrl = $certificate->template_path
+            ? Storage::disk($this->templateDisk())->url($certificate->template_path)
+            : null;
+
+        return view('pages.admin.editor', compact('certificate', 'templateUrl'));
     }
 
-    public function showAll()
+    public function updatePositions(Request $request, int $id)
     {
-        $certificates = Certificate::latest()->paginate(10);
+        $positions = $request->validate([
+            'pos_number_x' => ['required', 'integer', 'between:0,800'],
+            'pos_number_y' => ['required', 'integer', 'between:0,565'],
+            'pos_name_x' => ['required', 'integer', 'between:0,800'],
+            'pos_name_y' => ['required', 'integer', 'between:0,565'],
+            'pos_qr_x' => ['required', 'integer', 'between:0,800'],
+            'pos_qr_y' => ['required', 'integer', 'between:0,565'],
+        ]);
+
+        $certificate = Certificate::findOrFail($id);
+        $certificate->update($positions);
+
+        return redirect()->route('admin.certificate.editor', $id)
+            ->with('success', 'Posisi sertifikat berhasil disimpan.');
+    }
+
+    public function showAll(Request $request)
+    {
+        $certificates = Certificate::query()
+            ->when($request->query('token'), fn ($query, $token) => $query->where('qr_token', $token))
+            ->latest()
+            ->paginate(10);
+
         return view('pages.admin.check_certificate', compact('certificates'));
+    }
+
+    public function download(int $id)
+    {
+        $certificate = Certificate::findOrFail($id);
+        $disk = Storage::disk($this->templateDisk());
+        $templateDataUri = null;
+
+        if ($certificate->template_path && $disk->exists($certificate->template_path)) {
+            $mimeType = $disk->mimeType($certificate->template_path) ?: 'image/png';
+            $templateDataUri = 'data:'.$mimeType.';base64,'.base64_encode($disk->get($certificate->template_path));
+        }
+
+        $renderer = new ImageRenderer(new RendererStyle(200), new SvgImageBackEnd());
+        $qrCode = base64_encode((new Writer($renderer))->writeString(
+            route('public.certificate.check', ['token' => $certificate->qr_token]),
+        ));
+
+        return Pdf::loadView('pages.pdf_template', compact('certificate', 'templateDataUri', 'qrCode'))
+            ->setPaper('a4', 'landscape')
+            ->download('certificate-'.$certificate->id.'.pdf');
     }
 
     // METHOD HAPUS SERTIFIKAT
@@ -84,12 +136,20 @@ class CertificateController extends Controller
         $certificate = Certificate::findOrFail($id);
         
         // Hapus file template jika ada
-        if ($certificate->template_path && Storage::disk('public')->exists($certificate->template_path)) {
-            Storage::disk('public')->delete($certificate->template_path);
+        $disk = Storage::disk($this->templateDisk());
+        if ($certificate->template_path && $disk->exists($certificate->template_path)) {
+            $disk->delete($certificate->template_path);
         }
 
         $certificate->delete();
 
         return redirect()->route('admin.certificate.check')->with('success', 'Sertifikat berhasil dihapus!');
+    }
+
+    private function templateDisk(): string
+    {
+        return config('filesystems.default') === 'local'
+            ? 'public'
+            : config('filesystems.default');
     }
 }

@@ -10,7 +10,7 @@
 
         <!-- Container Canvas Sertifikat -->
         <div id="certificate-canvas" class="position-relative mx-auto border rounded shadow-sm overflow-hidden" 
-             style="width: 800px; height: 565px; background: #ffffff url('{{ $certificate->template_path ? asset("storage/" . $certificate->template_path) : "" }}') no-repeat center/contain;">
+             style="width: 800px; height: 565px; background: #ffffff url('{{ $templateUrl ?? '' }}') no-repeat center/contain;">
             
             @if(!$certificate->template_path)
                 <div class="position-absolute top-50 start-50 translate-middle text-center text-muted">
@@ -48,7 +48,7 @@
             <input type="hidden" name="pos_qr_y" id="pos_qr_y" value="{{ $certificate->pos_qr_y }}">
 
             <div class="d-flex justify-content-center gap-3">
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary rounded-pill px-4">Batal / Kembali</a>
+                <a href="{{ route('admin.certificate.create') }}" class="btn btn-secondary rounded-pill px-4">Batal / Kembali</a>
                 <button type="submit" class="btn btn-primary-custom text-white rounded-pill px-4">Simpan Posisi</button>
             </div>
         </form>
