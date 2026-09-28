@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "outputDirectory": "",
+  "outputDirectory": ".",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2"
@@ -19,6 +19,10 @@
     {
       "source": "/robots.txt",
       "destination": "/public/robots.txt"
+    },
+    {
+      "source": "/storage/(.*)",
+      "destination": "/public/storage/$1"
     },
     {
       "source": "/(.*)",
