@@ -7,26 +7,26 @@
       "runtime": "vercel-php@0.7.2"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/build/(.*)",
-      "dest": "/public/build/$1"
+      "source": "/build/(.*)",
+      "destination": "/public/build/$1"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
+      "source": "/favicon.ico",
+      "destination": "/public/favicon.ico"
     },
     {
-      "src": "/robots.txt",
-      "dest": "/public/robots.txt"
+      "source": "/robots.txt",
+      "destination": "/public/robots.txt"
     },
     {
-      "src": "/storage/(.*)",
-      "dest": "/public/storage/$1"
+      "source": "/storage/(.*)",
+      "destination": "/public/storage/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/api/index.php"
+      "source": "/(.*)",
+      "destination": "/api/index.php"
     }
   ]
 }
