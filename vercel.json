@@ -4,28 +4,28 @@
   "outputDirectory": ".",
   "functions": {
     "api/index.php": {
-      "runtime": "vercel-php@0.7.2"
+      "runtime": "vercel-php@0.7.3"
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/build/(.*)",
-      "destination": "/public/build/$1"
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1"
     },
     {
-      "source": "/favicon.ico",
-      "destination": "/public/favicon.ico"
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
     },
     {
-      "source": "/robots.txt",
-      "destination": "/public/robots.txt"
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
     },
     {
-      "source": "/storage/(.*)",
-      "destination": "/public/storage/$1"
+      "src": "/storage/(.*)",
+      "dest": "/public/storage/$1"
     },
     {
-      "source": "/(.*)",
+      "src": "/((?!api/).*)",
       "destination": "/api/index.php"
     }
   ]
