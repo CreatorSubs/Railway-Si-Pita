@@ -59,6 +59,7 @@
                                 @if(strtolower($u->email) !== 'admin@diskominfo.go.id')
                                     <form action="{{ route('admin.user.toggle', $u->id) }}" method="POST" class="d-inline">
                                         @csrf
+                                        @method('PATCH')
                                         @if($u->is_active ?? true)
                                             <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" onclick="return confirm('Nonaktifkan akun ini?')">
                                                 <i class="bi bi-person-x me-1"></i> Nonaktifkan

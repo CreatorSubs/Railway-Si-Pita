@@ -17,6 +17,16 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+    <!-- Search Bar -->
+    <form action="{{ route('admin.certificate.show_all') }}" method="GET" class="mb-4">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-2 border-dark border-end-0 rounded-start-pill ps-3">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" name="search" class="form-control border-2 border-dark border-start-0 rounded-end-pill py-2" 
+                   placeholder="Cari berdasarkan nama, NIP/NIK, nomor sertifikat, atau kegiatan..." value="{{ request('search') }}">
+        </div>
+    </form>
 
     <div class="card border-2 border-dark rounded-4 shadow-sm overflow-hidden">
         <div class="table-responsive">
@@ -45,6 +55,10 @@
                             <td>{{ \Carbon\Carbon::parse($cert->issue_date)->format('d M Y') }}</td>
                             <td>
                                 <div class="d-flex justify-content-center gap-1">
+                                    <a href="{{ route('admin.certificate.download', $cert->id) }}" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" target="_blank">
+                                        <i class="bi bi-download"></i> Unduh
+                                    </a>
+
                                     <a href="{{ route('admin.certificate.editor', $cert->id) }}" class="btn btn-sm btn-outline-dark rounded-pill fw-bold">
                                         <i class="bi bi-arrows-move"></i> Posisi
                                     </a>

@@ -26,9 +26,9 @@
                     @forelse($certificates as $index => $cert)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td class="fw-bold">{{ $cert->name ?? $cert->nama_penerima ?? '-' }}</td>
-                            <td>{{ $cert->identity_number ?? $cert->nip ?? '-' }}</td>
-                            <td>{{ $cert->event_name ?? $cert->nama_kegiatan ?? '-' }}</td>
+                            <td class="fw-bold">{{ $cert->recipient_name ?? '-' }}</td>
+                            <td>{{ $cert->recipient_identity ?? '-' }}</td>
+                            <td>{{ $cert->event_name ?? '-' }}</td>
                             <td>
                                 <span class="badge bg-info text-dark border border-dark">
                                     {{ $cert->created_by ?? 'admin@diskominfo.go.id' }}

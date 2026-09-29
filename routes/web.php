@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\CertificateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Http\Controllers\CertificateController;
-use App\Http\Controllers\AdminUserController;
+use Illuminate\Support\Facades\Route;
 
 // ==========================================
 // ROUTE PUBLIK
@@ -17,7 +16,6 @@ Route::get('/', function () {
 Route::get('/certificate/search', [CertificateController::class, 'showAll'])->name('certificate.search');
 Route::get('/cek-sertifikat', [CertificateController::class, 'showAll'])->name('public.certificate.check');
 
-
 // ==========================================
 // ROUTE AUTHENTICATION
 // ==========================================
@@ -25,20 +23,22 @@ Route::get('/login', function () {
     if (Auth::check()) {
         return redirect()->route('admin.certificate.create');
     }
+
     return view('auth.login');
 })->name('login');
 
 Route::post('/login', function (Request $request) {
     $credentials = $request->validate([
-        'email'    => ['required', 'email'],
+        'email' => ['required', 'email'],
         'password' => ['required'],
     ]);
 
     if (Auth::attempt($credentials)) {
         $user = Auth::user();
 
-        if (isset($user->is_active) && !$user->is_active) {
+        if (isset($user->is_active) && ! $user->is_active) {
             Auth::logout();
+
             return back()->withErrors([
                 'email' => 'Akun Anda telah dinonaktifkan oleh Owner.',
             ]);
@@ -59,9 +59,9 @@ Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+
     return redirect()->route('login');
 })->name('logout');
-
 
 // ==========================================
 // ROUTE ADMIN & OWNER (DIPROTEKSI MIDDLEWARE AUTH)
@@ -72,7 +72,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/certificate/store', [CertificateController::class, 'store'])->name('certificate.store');
     Route::get('/certificate/editor/{id}', [CertificateController::class, 'editor'])->name('certificate.editor');
     Route::post('/certificate/update-positions/{id}', [CertificateController::class, 'updatePositions'])->name('certificate.update_positions');
-    
+
     // Route untuk Cek/Lihat Semua Sertifikat
     Route::get('/certificate/check', [CertificateController::class, 'showAll'])->name('certificate.show_all');
     Route::get('/certificate/index', [CertificateController::class, 'showAll'])->name('certificate.index');

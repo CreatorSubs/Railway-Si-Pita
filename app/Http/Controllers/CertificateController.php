@@ -2,26 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Certificate;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CertificateController extends Controller
 {
     public function create()
     {
-        return view('pages.admin.create_certificate');
+        $sampleCertificate = Certificate::latest()->first();
+        $sampleCertificateId = $sampleCertificate?->id;
+
+        return view('pages.admin.create_certificate', compact('sampleCertificateId'));
     }
 
     public function store(Request $request)
     {
-        // Handle upload template dengan aman: 
+        // Handle upload template dengan aman:
         // Jika ada file baru di-upload, simpan. Jika tidak, ambil dari input hidden atau gunakan default.
         $templatePath = null;
         if ($request->hasFile('template')) {
@@ -33,37 +36,40 @@ class CertificateController extends Controller
         $prefix = $request->certificate_number_prefix ?? 'SERT/';
         $eventName = $request->event_name ?? 'Kegiatan';
         $issueDate = $request->issue_date ?? date('Y-m-d');
+        $createdBy = auth()->user()?->email ?? session('user_email', 'admin@diskominfo.go.id');
 
         // CASE 1: JIKA INPUT BANYAK DATA (VIA MODAL GRID / CSV)
         if ($request->has('participants') && is_array($request->participants) && count($request->participants) > 0) {
             foreach ($request->participants as $index => $p) {
-                if (!empty($p['name'])) {
+                if (! empty($p['name'])) {
                     Certificate::create([
-                        'certificate_number' => $prefix . strtoupper(Str::random(5)) . '-' . ($index + 1),
-                        'recipient_name'     => $p['name'],
-                        'recipient_identity' => !empty($p['identity_number']) ? $p['identity_number'] : '-',
-                        'institution'        => $p['agency'] ?? 'Diskominfo',
-                        'event_name'         => $eventName,
-                        'role'               => $p['role'] ?? 'Peserta',
-                        'issue_date'         => $issueDate,
-                        'template_path'      => $templatePath,
-                        'qr_token'           => Str::uuid()->toString(),
+                        'created_by' => $createdBy,
+                        'certificate_number' => $prefix.strtoupper(Str::random(5)).'-'.($index + 1),
+                        'recipient_name' => $p['name'],
+                        'recipient_identity' => ! empty($p['identity_number']) ? $p['identity_number'] : '-',
+                        'institution' => $p['agency'] ?? 'Diskominfo',
+                        'event_name' => $eventName,
+                        'role' => $p['role'] ?? 'Peserta',
+                        'issue_date' => $issueDate,
+                        'template_path' => $templatePath,
+                        'qr_token' => Str::uuid()->toString(),
                     ]);
                 }
             }
-        } 
+        }
         // CASE 2: JIKA INPUT SATUAN
         else {
             Certificate::create([
-                'certificate_number' => $prefix . strtoupper(Str::random(6)),
-                'recipient_name'     => $request->recipient_name ?? 'Peserta',
+                'created_by' => $createdBy,
+                'certificate_number' => $prefix.strtoupper(Str::random(6)),
+                'recipient_name' => $request->recipient_name ?? 'Peserta',
                 'recipient_identity' => $request->recipient_identity ?? '-',
-                'institution'        => $request->institution ?? 'Diskominfo',
-                'event_name'         => $eventName,
-                'role'               => $request->role ?? 'Peserta',
-                'issue_date'         => $issueDate,
-                'template_path'      => $templatePath,
-                'qr_token'           => Str::uuid()->toString(),
+                'institution' => $request->institution ?? 'Diskominfo',
+                'event_name' => $eventName,
+                'role' => $request->role ?? 'Peserta',
+                'issue_date' => $issueDate,
+                'template_path' => $templatePath,
+                'qr_token' => Str::uuid()->toString(),
             ]);
         }
 
@@ -103,8 +109,19 @@ class CertificateController extends Controller
     {
         $certificates = Certificate::query()
             ->when($request->query('token'), fn ($query, $token) => $query->where('qr_token', $token))
+            ->when($request->query('name'), fn ($query, $name) => $query->where('recipient_name', 'like', "%{$name}%"))
+            ->when($request->query('identity_number'), fn ($query, $id) => $query->where('recipient_identity', 'like', "%{$id}%"))
+            ->when($request->query('search'), function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('recipient_name', 'like', "%{$search}%")
+                        ->orWhere('recipient_identity', 'like', "%{$search}%")
+                        ->orWhere('certificate_number', 'like', "%{$search}%")
+                        ->orWhere('event_name', 'like', "%{$search}%");
+                });
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('pages.admin.check_certificate', compact('certificates'));
     }
@@ -120,7 +137,7 @@ class CertificateController extends Controller
             $templateDataUri = 'data:'.$mimeType.';base64,'.base64_encode($disk->get($certificate->template_path));
         }
 
-        $renderer = new ImageRenderer(new RendererStyle(200), new SvgImageBackEnd());
+        $renderer = new ImageRenderer(new RendererStyle(200), new SvgImageBackEnd);
         $qrCode = base64_encode((new Writer($renderer))->writeString(
             route('public.certificate.check', ['token' => $certificate->qr_token]),
         ));
@@ -134,7 +151,7 @@ class CertificateController extends Controller
     public function destroy($id)
     {
         $certificate = Certificate::findOrFail($id);
-        
+
         // Hapus file template jika ada
         $disk = Storage::disk($this->templateDisk());
         if ($certificate->template_path && $disk->exists($certificate->template_path)) {

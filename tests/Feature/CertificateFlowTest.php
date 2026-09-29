@@ -51,4 +51,82 @@ class CertificateFlowTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_user_toggle_status_via_patch(): void
+    {
+        $owner = User::factory()->create(['email' => 'admin@diskominfo.go.id']);
+        $admin = User::factory()->create(['email' => 'staff@diskominfo.go.id', 'is_active' => true]);
+
+        $this->actingAs($owner);
+
+        $response = $this->patch(route('admin.user.toggle', $admin->id));
+        $response->assertRedirect();
+
+        $this->assertFalse((bool) $admin->fresh()->is_active);
+    }
+
+    public function test_certificate_store_persists_created_by(): void
+    {
+        $user = User::factory()->create(['email' => 'creator@diskominfo.go.id']);
+        $this->actingAs($user);
+
+        $response = $this->post(route('admin.certificate.store'), [
+            'certificate_number_prefix' => 'TEST/',
+            'event_name' => 'Workshop IT',
+            'issue_date' => '2026-09-29',
+            'recipient_name' => 'Budi Santoso',
+            'recipient_identity' => '3201234567890001',
+            'institution' => 'Diskominfo',
+            'role' => 'Peserta',
+        ]);
+
+        $response->assertRedirect(route('admin.certificate.check'));
+
+        $this->assertDatabaseHas('certificates', [
+            'recipient_name' => 'Budi Santoso',
+            'recipient_identity' => '3201234567890001',
+            'created_by' => 'creator@diskominfo.go.id',
+        ]);
+    }
+
+    public function test_owner_history_renders_recipient_details(): void
+    {
+        $owner = User::factory()->create(['email' => 'admin@diskominfo.go.id']);
+        $this->actingAs($owner);
+
+        Certificate::create([
+            'certificate_number' => 'CERT/HIST/01',
+            'recipient_name' => 'Siti Nurhaliza',
+            'recipient_identity' => '1987654321',
+            'event_name' => 'Seminar Keamanan Informasi',
+            'issue_date' => '2026-09-29',
+            'template_path' => 'template.png',
+            'qr_token' => (string) Str::uuid(),
+            'created_by' => 'admin@diskominfo.go.id',
+        ]);
+
+        $response = $this->get(route('admin.certificate.history'));
+        $response->assertOk();
+        $response->assertSee('Siti Nurhaliza');
+        $response->assertSee('1987654321');
+        $response->assertSee('Seminar Keamanan Informasi');
+    }
+
+    public function test_public_certificate_search_by_name(): void
+    {
+        Certificate::create([
+            'certificate_number' => 'CERT/PUB/01',
+            'recipient_name' => 'Ahmad Dahlan',
+            'recipient_identity' => '1122334455',
+            'event_name' => 'Pelatihan AI',
+            'issue_date' => '2026-09-29',
+            'template_path' => 'template.png',
+            'qr_token' => (string) Str::uuid(),
+        ]);
+
+        $response = $this->get(route('certificate.search', ['name' => 'Ahmad Dahlan']));
+        $response->assertOk();
+        $response->assertSee('Ahmad Dahlan');
+        $response->assertSee('CERT/PUB/01');
+    }
 }

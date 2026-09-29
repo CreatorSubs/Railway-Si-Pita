@@ -41,9 +41,15 @@
 
                     <!-- Button Atur Posisi Teks & QR -->
                     <div>
-                        <a href="{{ route('admin.certificate.editor', 1) }}" onclick="saveDraftToSession(event, this.href)" class="btn btn-outline-secondary border-2 border-dark rounded-pill w-100 py-2 fw-bold shadow-sm">
-                            <i class="bi bi-arrows-move me-1"></i> Text & QR Positions
-                        </a>
+                        @if(!empty($sampleCertificateId))
+                            <a href="{{ route('admin.certificate.editor', $sampleCertificateId) }}" onclick="saveDraftToSession(event, this.href)" class="btn btn-outline-secondary border-2 border-dark rounded-pill w-100 py-2 fw-bold shadow-sm">
+                                <i class="bi bi-arrows-move me-1"></i> Text & QR Positions
+                            </a>
+                        @else
+                            <button type="button" class="btn btn-outline-secondary border-2 border-dark rounded-pill w-100 py-2 fw-bold shadow-sm" onclick="alert('Belum ada sertifikat tersimpan. Buat sertifikat pertama terlebih dahulu untuk dapat mengatur posisi.')">
+                                <i class="bi bi-arrows-move me-1"></i> Text & QR Positions
+                            </button>
+                        @endif
                     </div>
 
                     <!-- MAIN SUBMIT BUTTON -->

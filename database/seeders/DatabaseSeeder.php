@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $ownerPassword = env('OWNER_PASSWORD');
+        $ownerPassword = config('auth.owner_password') ?: env('OWNER_PASSWORD');
 
         if (! $ownerPassword) {
             return;
