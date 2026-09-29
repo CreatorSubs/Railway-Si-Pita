@@ -39,7 +39,7 @@ RUN printf 'variables_order = "EGPCS"\n' > /usr/local/etc/php/conf.d/docker-php-
 
 # Aktifkan mod_rewrite Apache, PassEnv, dan aturan Laravel pada document root.
 RUN a2enmod rewrite \
-    && printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\nPassEnv APP_ENV APP_KEY APP_DEBUG APP_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD SESSION_DRIVER CACHE_STORE LOG_CHANNEL FILESYSTEM_DISK MYSQL_ATTR_SSL_CA\n' > /etc/apache2/conf-available/laravel.conf \
+    && printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\nPassEnv APP_ENV APP_KEY APP_DEBUG APP_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD MYSQLHOST MYSQLPORT MYSQLDATABASE MYSQLUSER MYSQLPASSWORD MYSQL_URL SESSION_DRIVER CACHE_STORE LOG_CHANNEL FILESYSTEM_DISK MYSQL_ATTR_SSL_CA\n' > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
 
 # Ubah Document Root Apache agar mengarah ke folder /public Laravel

@@ -12,7 +12,7 @@ if [ -n "${MYSQL_ATTR_SSL_CA_BASE64:-}" ]; then
 	export MYSQL_ATTR_SSL_CA=/tmp/aiven-ca.pem
 fi
 
-# Ensure storage directories exist and have proper permissions (crucial when mounting volumes)
+# Ensure storage directories exist
 mkdir -p /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/views \
@@ -20,23 +20,28 @@ mkdir -p /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/app/public \
          /var/www/html/bootstrap/cache
 
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+touch /var/www/html/storage/logs/laravel.log
 
 # Re-link storage just in case a volume was mounted
 php artisan storage:link --force || true
 
 # Run database migrations if DB is configured (non-fatal if DB is temporarily unreachable)
-if [ -n "${DB_HOST:-}" ]; then
+DB_TARGET="${DB_HOST:-${MYSQLHOST:-}}"
+if [ -n "$DB_TARGET" ] || [ -n "${MYSQL_URL:-}" ] || [ -n "${DB_URL:-}" ]; then
     echo "=== Running database migrations ==="
     php artisan migrate --force || echo "Warning: Migration failed. Please verify DB connection settings."
 fi
 
 # Seed Owner account if OWNER_PASSWORD is set and DB is configured
-if [ -n "${OWNER_PASSWORD:-}" ] && [ -n "${DB_HOST:-}" ]; then
+if [ -n "${OWNER_PASSWORD:-}" ] && { [ -n "$DB_TARGET" ] || [ -n "${MYSQL_URL:-}" ] || [ -n "${DB_URL:-}" ]; }; then
     echo "=== Seeding Owner account ==="
     php artisan db:seed --force || echo "Warning: Seeding failed."
 fi
+
+# Ensure correct permissions for www-data after any root operations
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+chmod 666 /var/www/html/storage/logs/laravel.log
 
 echo "=== Starting Apache web server on port ${PORT} ==="
 exec apache2-foreground
