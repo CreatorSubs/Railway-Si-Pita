@@ -38,10 +38,14 @@ if [ -n "${OWNER_PASSWORD:-}" ] && { [ -n "$DB_TARGET" ] || [ -n "${MYSQL_URL:-}
     php artisan db:seed --force || echo "Warning: Seeding failed."
 fi
 
-# Ensure correct permissions for www-data after any root operations
+# Pastikan izin akses benar untuk www-data setelah operasi root
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 chmod 666 /var/www/html/storage/logs/laravel.log
+
+# Paksa matikan modul MPM yang bentrok dan aktifkan mpm_prefork secara bersih
+a2dismod -f mpm_event mpm_worker mpm_prefork 2>/dev/null || true
+a2enmod mpm_prefork
 
 echo "=== Starting Apache web server on port ${PORT} ==="
 exec apache2-foreground
